@@ -1605,7 +1605,19 @@ const AddTripModal = ({ isOpen, onClose, onSave, prefillData }) => {
         </div>
 
         {/* Buttons */}
-        <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+        <div style={{ 
+          display: "flex", 
+          gap: 12, 
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: 24,
+          backgroundColor: "white",
+          borderTop: "1px solid #e5e7eb",
+          maxWidth: 428,
+          margin: "0 auto",
+        }}>
           <button
             onClick={onClose}
             className="btn-press"
