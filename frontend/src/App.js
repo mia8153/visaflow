@@ -1423,8 +1423,7 @@ const AddTripModal = ({ isOpen, onClose, onSave, prefillData }) => {
           backgroundColor: "white",
           borderRadius: "24px 24px 0 0",
           padding: 24,
-          paddingBottom: 100,
-          maxHeight: "85vh",
+          maxHeight: "80vh",
           overflowY: "auto",
           position: "relative",
         }}
