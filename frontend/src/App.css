@@ -1,34 +1,143 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-blue: #0000ee;
+  --success-green: #10b981;
+  --warning-yellow: #f59e0b;
+  --urgent-orange: #fb923c;
+  --critical-red: #ef4444;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+html, body, #root {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.App-link {
-    color: #61dafb;
+body {
+  background: var(--background);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.app-container {
+  max-width: 428px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Button Press Animation */
+.btn-press {
+  transition: transform 100ms ease-out;
+}
+
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Pulse Animation for Critical Status */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-ring {
+  animation: pulse 1s infinite;
+}
+
+/* Modal Slide Up Animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-slide-up {
+  animation: slideUp 300ms ease-out;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 300ms ease-out;
+}
+
+/* Progress Ring */
+.progress-ring {
+  transition: stroke-dashoffset 500ms ease-out, stroke 500ms ease-out;
+}
+
+/* Card Shadow */
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 200ms ease;
+}
+
+.card-shadow:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Glassmorphism Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+/* Input Focus */
+input:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 238, 0.2);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  transition: background-color 200ms ease;
+}
+
+/* Confetti Canvas */
+#confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
 }
