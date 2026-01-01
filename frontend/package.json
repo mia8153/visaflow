@@ -29,7 +29,7 @@
     "react-native-web": "^0.21.2"
   },
   "scripts": {
-    "start": "expo start --web --port 3000",
+    "start": "EXPO_NO_METRO_WORKSPACE_ROOT=1 expo start --web --port 3000 --no-dev --minify",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web --port 3000"
