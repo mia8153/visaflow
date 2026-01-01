@@ -31,7 +31,8 @@
     "serve": "^14.2.5"
   },
   "scripts": {
-    "start": "EXPO_NO_METRO_WORKSPACE_ROOT=1 expo start --web --port 3000 --no-dev --minify",
+    "start": "npx serve dist -l 3000 -s",
+    "build": "WATCHPACK_POLLING=true npx expo export --platform web --output-dir dist",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web --port 3000"
