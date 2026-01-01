@@ -217,7 +217,7 @@ COUNTRIES = [
     {"code": "NZ", "name": "New Zealand"},
     {"code": "ZA", "name": "South Africa"},
     {"code": "NL", "name": "Netherlands"},
-    {"code": "BE": "name": "Belgium"},
+    {"code": "BE", "name": "Belgium"},
     {"code": "CH", "name": "Switzerland"},
     {"code": "AT", "name": "Austria"},
     {"code": "SE", "name": "Sweden"},
