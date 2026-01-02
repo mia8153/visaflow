@@ -3,9 +3,11 @@ import {
   View,
   Text,
   TouchableOpacity,
+  TextInput,
   StyleSheet,
   Dimensions,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -67,45 +69,71 @@ const NotificationsScreen = ({ onNext, onEnable }) => {
   );
 };
 
-// Nationality Screen
-const NationalityScreen = ({ onComplete }) => {
+// Profile Setup Screen (Name + Nationality)
+const ProfileSetupScreen = ({ onComplete }) => {
+  const [firstName, setFirstName] = useState('');
   const [nationality, setNationality] = useState('');
   const [nationalityName, setNationalityName] = useState('');
 
+  const isValid = firstName.trim().length > 0 && nationality;
+
   const handleComplete = () => {
-    if (nationality) {
-      onComplete(nationality, nationalityName);
+    if (isValid) {
+      onComplete(firstName.trim(), nationality, nationalityName);
     }
   };
 
   return (
     <SafeAreaView style={styles.lightScreen}>
-      <View style={styles.centerContent}>
+      <KeyboardAvoidingView 
+        style={styles.centerContent}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <View style={styles.iconCircle}>
-          <Ionicons name="document-outline" size={40} color={Colors.primary} />
+          <Ionicons name="person-outline" size={40} color={Colors.primary} />
         </View>
-        <Text style={styles.darkTitle}>Select Your Nationality</Text>
+        <Text style={styles.darkTitle}>Set Up Your Profile</Text>
         <Text style={styles.darkSubtitle}>
-          This helps us show you accurate visa requirements for your passport.
+          Tell us a bit about yourself to personalize your experience.
         </Text>
-        <View style={styles.pickerContainer}>
-          <CountryPicker
-            value={nationality}
-            onSelect={(code, name) => {
-              setNationality(code);
-              setNationalityName(name);
-            }}
-            placeholder="Select your nationality"
-          />
+        
+        <View style={styles.formContainer}>
+          {/* First Name Input */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>First Name</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter your first name"
+              placeholderTextColor={Colors.textSecondary}
+              value={firstName}
+              onChangeText={setFirstName}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+          </View>
+
+          {/* Nationality Picker */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Nationality</Text>
+            <CountryPicker
+              value={nationality}
+              onSelect={(code, name) => {
+                setNationality(code);
+                setNationalityName(name);
+              }}
+              placeholder="Select your nationality"
+            />
+          </View>
         </View>
+
         <TouchableOpacity
-          style={[styles.primaryButtonBlue, !nationality && styles.buttonDisabled]}
+          style={[styles.primaryButtonBlue, !isValid && styles.buttonDisabled]}
           onPress={handleComplete}
-          disabled={!nationality}
+          disabled={!isValid}
         >
           <Text style={styles.primaryButtonTextWhite}>Complete Setup</Text>
         </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -118,8 +146,8 @@ export default function Onboarding() {
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiRef = useRef(null);
 
-  const handleComplete = async (code, name) => {
-    await completeOnboarding(code, name, notificationsEnabled);
+  const handleComplete = async (firstName, code, name) => {
+    await completeOnboarding(firstName, code, name, notificationsEnabled);
     setShowConfetti(true);
     if (confettiRef.current) {
       confettiRef.current.start();
@@ -142,7 +170,7 @@ export default function Onboarding() {
           onEnable={setNotificationsEnabled}
         />
       )}
-      {step === 2 && <NationalityScreen onComplete={handleComplete} />}
+      {step === 2 && <ProfileSetupScreen onComplete={handleComplete} />}
       
       {showConfetti && (
         <ConfettiCannon
@@ -267,9 +295,26 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 8,
   },
-  pickerContainer: {
+  formContainer: {
     width: '100%',
     maxWidth: 350,
     marginBottom: 32,
+    gap: 20,
+  },
+  inputContainer: {
+    width: '100%',
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  textInput: {
+    height: 48,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: Colors.textPrimary,
   },
 });
