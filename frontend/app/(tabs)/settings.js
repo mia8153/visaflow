@@ -285,6 +285,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 24,
   },
+  headerSpacer: {
+    height: 20,
+  },
   settingsContent: {
     padding: 16,
     paddingBottom: 100,
