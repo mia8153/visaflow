@@ -60,7 +60,7 @@ export const AppProvider = ({ children }) => {
     setTimeout(() => setShowConfetti(false), 3000);
   };
 
-  const completeOnboarding = async (nationalityCode, nationalityName, notificationsEnabled) => {
+  const completeOnboarding = async (firstName, nationalityCode, nationalityName, notificationsEnabled) => {
     try {
       const response = await fetch(`${API_URL}/users`, {
         method: 'POST',
@@ -74,6 +74,7 @@ export const AppProvider = ({ children }) => {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            first_name: firstName,
             nationality_code: nationalityCode,
             nationality: nationalityName,
             notifications_enabled: notificationsEnabled,
