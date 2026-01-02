@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useApp } from '../../context/AppContext';
 import { Colors, getStatusColor, getStatusText, VISA_TYPES } from '../../constants';
 import { ProgressRing, CountryPicker, CountryFlag } from '../../components';
@@ -39,6 +38,132 @@ const calculateProgress = (entryDate, exitDate) => {
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+// Custom Date Picker Modal (Web Compatible)
+const DatePickerModal = ({ visible, onClose, onSelect, currentDate, minDate, title }) => {
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+  const [selectedDay, setSelectedDay] = useState(currentDate.getDate());
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i);
+  
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const days = Array.from({ length: getDaysInMonth(selectedYear, selectedMonth) }, (_, i) => i + 1);
+
+  const handleConfirm = () => {
+    const newDate = new Date(selectedYear, selectedMonth, selectedDay);
+    if (minDate && newDate < minDate) {
+      onSelect(minDate);
+    } else {
+      onSelect(newDate);
+    }
+    onClose();
+  };
+
+  useEffect(() => {
+    setSelectedYear(currentDate.getFullYear());
+    setSelectedMonth(currentDate.getMonth());
+    setSelectedDay(currentDate.getDate());
+  }, [currentDate, visible]);
+
+  if (!visible) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={datePickerStyles.overlay}>
+        <View style={datePickerStyles.container}>
+          <View style={datePickerStyles.header}>
+            <Text style={datePickerStyles.title}>{title || 'Select Date'}</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={datePickerStyles.pickersRow}>
+            {/* Month Picker */}
+            <View style={datePickerStyles.pickerColumn}>
+              <Text style={datePickerStyles.pickerLabel}>Month</Text>
+              <ScrollView style={datePickerStyles.pickerScroll} showsVerticalScrollIndicator={false}>
+                {months.map((month, index) => (
+                  <TouchableOpacity
+                    key={month}
+                    style={[
+                      datePickerStyles.pickerItem,
+                      selectedMonth === index && datePickerStyles.pickerItemSelected,
+                    ]}
+                    onPress={() => setSelectedMonth(index)}
+                  >
+                    <Text style={[
+                      datePickerStyles.pickerItemText,
+                      selectedMonth === index && datePickerStyles.pickerItemTextSelected,
+                    ]}>{month}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Day Picker */}
+            <View style={datePickerStyles.pickerColumn}>
+              <Text style={datePickerStyles.pickerLabel}>Day</Text>
+              <ScrollView style={datePickerStyles.pickerScroll} showsVerticalScrollIndicator={false}>
+                {days.map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      datePickerStyles.pickerItem,
+                      selectedDay === day && datePickerStyles.pickerItemSelected,
+                    ]}
+                    onPress={() => setSelectedDay(day)}
+                  >
+                    <Text style={[
+                      datePickerStyles.pickerItemText,
+                      selectedDay === day && datePickerStyles.pickerItemTextSelected,
+                    ]}>{day}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Year Picker */}
+            <View style={datePickerStyles.pickerColumn}>
+              <Text style={datePickerStyles.pickerLabel}>Year</Text>
+              <ScrollView style={datePickerStyles.pickerScroll} showsVerticalScrollIndicator={false}>
+                {years.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    style={[
+                      datePickerStyles.pickerItem,
+                      selectedYear === year && datePickerStyles.pickerItemSelected,
+                    ]}
+                    onPress={() => setSelectedYear(year)}
+                  >
+                    <Text style={[
+                      datePickerStyles.pickerItemText,
+                      selectedYear === year && datePickerStyles.pickerItemTextSelected,
+                    ]}>{year}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+
+          <View style={datePickerStyles.buttons}>
+            <TouchableOpacity style={datePickerStyles.cancelButton} onPress={onClose}>
+              <Text style={datePickerStyles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={datePickerStyles.confirmButton} onPress={handleConfirm}>
+              <Text style={datePickerStyles.confirmButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 };
 
 // Add Trip Modal Component
@@ -169,30 +294,30 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
             </View>
           </ScrollView>
 
-          {/* Date Pickers */}
-          {showEntryPicker && (
-            <DateTimePicker
-              value={entryDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(event, date) => {
-                setShowEntryPicker(false);
-                if (date) setEntryDate(date);
-              }}
-            />
-          )}
-          {showExitPicker && (
-            <DateTimePicker
-              value={exitDate}
-              mode="date"
-              minimumDate={entryDate}
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(event, date) => {
-                setShowExitPicker(false);
-                if (date) setExitDate(date);
-              }}
-            />
-          )}
+          {/* Custom Date Picker for Entry Date */}
+          <DatePickerModal
+            visible={showEntryPicker}
+            onClose={() => setShowEntryPicker(false)}
+            onSelect={(date) => {
+              setEntryDate(date);
+              // Adjust exit date if needed
+              if (date > exitDate) {
+                setExitDate(new Date(date.getTime() + 30 * 24 * 60 * 60 * 1000));
+              }
+            }}
+            currentDate={entryDate}
+            title="Select Entry Date"
+          />
+
+          {/* Custom Date Picker for Exit Date */}
+          <DatePickerModal
+            visible={showExitPicker}
+            onClose={() => setShowExitPicker(false)}
+            onSelect={setExitDate}
+            currentDate={exitDate}
+            minDate={entryDate}
+            title="Select Exit Date"
+          />
 
           {/* Visa Type Picker Modal */}
           <Modal visible={showVisaPicker} transparent animationType="fade">
@@ -202,19 +327,29 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
               onPress={() => setShowVisaPicker(false)}
             >
               <View style={modalStyles.visaPickerContainer}>
-                {VISA_TYPES.map((type) => (
+                <View style={modalStyles.visaPickerHeader}>
+                  <Text style={modalStyles.visaPickerTitle}>Select Visa Type</Text>
+                </View>
+                {VISA_TYPES.map((type, index) => (
                   <TouchableOpacity
                     key={type}
                     style={[
                       modalStyles.visaPickerItem,
                       visaType === type && modalStyles.visaPickerItemSelected,
+                      index === VISA_TYPES.length - 1 && { borderBottomWidth: 0 },
                     ]}
                     onPress={() => {
                       setVisaType(type);
                       setShowVisaPicker(false);
                     }}
                   >
-                    <Text style={modalStyles.visaPickerText}>{type}</Text>
+                    <Text style={[
+                      modalStyles.visaPickerText,
+                      visaType === type && modalStyles.visaPickerTextSelected,
+                    ]}>{type}</Text>
+                    {visaType === type && (
+                      <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -226,7 +361,7 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
   );
 };
 
-// Wide Trip Card Component
+// Wide Trip Card Component with Dividers
 const TripCardWide = ({ trip, onDelete }) => {
   const daysLeft = calculateDaysLeft(trip.exit_date);
   const progress = calculateProgress(trip.entry_date, trip.exit_date);
@@ -260,20 +395,45 @@ const TripCardWide = ({ trip, onDelete }) => {
         <Text style={styles.tripProgressText}>{Math.round(progress)}% used</Text>
       </View>
 
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* Trip Details with Dividers */}
       <View style={styles.tripDetails}>
         <View style={styles.tripDetailRow}>
-          <Text style={styles.tripDetailLabel}>Entry Date</Text>
-          <Text style={styles.tripDetailValue}>{formatDate(trip.entry_date)}</Text>
+          <View style={styles.tripDetailIcon}>
+            <Ionicons name="calendar-outline" size={18} color={Colors.primary} />
+          </View>
+          <View style={styles.tripDetailContent}>
+            <Text style={styles.tripDetailLabel}>Entry Date</Text>
+            <Text style={styles.tripDetailValue}>{formatDate(trip.entry_date)}</Text>
+          </View>
         </View>
+
+        <View style={styles.dividerThin} />
+
         <View style={styles.tripDetailRow}>
-          <Text style={styles.tripDetailLabel}>Exit By</Text>
-          <Text style={[styles.tripDetailValue, daysLeft <= 7 && styles.tripExitCritical]}>
-            {formatDate(trip.exit_date)}
-          </Text>
+          <View style={styles.tripDetailIcon}>
+            <Ionicons name="log-out-outline" size={18} color={daysLeft <= 7 ? Colors.critical : Colors.primary} />
+          </View>
+          <View style={styles.tripDetailContent}>
+            <Text style={styles.tripDetailLabel}>Exit By</Text>
+            <Text style={[styles.tripDetailValue, daysLeft <= 7 && styles.tripExitCritical]}>
+              {formatDate(trip.exit_date)}
+            </Text>
+          </View>
         </View>
+
+        <View style={styles.dividerThin} />
+
         <View style={styles.tripDetailRow}>
-          <Text style={styles.tripDetailLabel}>Duration</Text>
-          <Text style={styles.tripDetailValue}>{trip.total_days} days</Text>
+          <View style={styles.tripDetailIcon}>
+            <Ionicons name="time-outline" size={18} color={Colors.primary} />
+          </View>
+          <View style={styles.tripDetailContent}>
+            <Text style={styles.tripDetailLabel}>Duration</Text>
+            <Text style={styles.tripDetailValue}>{trip.total_days} days</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -322,14 +482,6 @@ export default function TrackerScreen() {
   const progress = activeTrip ? calculateProgress(activeTrip.entry_date, activeTrip.exit_date) : 0;
   const statusColor = getStatusColor(daysLeft);
   const statusText = getStatusText(daysLeft);
-
-  // Get greeting based on time of day
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
 
   const firstName = user?.first_name || 'Traveler';
 
@@ -489,7 +641,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   tripProgressContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   tripProgressBar: {
     height: 10,
@@ -507,10 +659,38 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 6,
   },
+  // Dividers
+  divider: {
+    height: 1,
+    backgroundColor: Colors.gray,
+    marginVertical: 16,
+  },
+  dividerThin: {
+    height: 1,
+    backgroundColor: Colors.lightGray,
+    marginVertical: 12,
+    marginLeft: 40,
+  },
+  // Trip Details
   tripDetails: {
-    gap: 12,
+    gap: 0,
   },
   tripDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  tripDetailIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#f0f0ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  tripDetailContent: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -705,10 +885,25 @@ const modalStyles = StyleSheet.create({
   visaPickerContainer: {
     backgroundColor: Colors.white,
     borderRadius: 16,
-    width: '80%',
+    width: '85%',
     overflow: 'hidden',
   },
+  visaPickerHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray,
+    backgroundColor: Colors.lightGray,
+  },
+  visaPickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
   visaPickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
@@ -719,6 +914,109 @@ const modalStyles = StyleSheet.create({
   visaPickerText: {
     fontSize: 16,
     color: Colors.textPrimary,
-    textAlign: 'center',
+  },
+  visaPickerTextSelected: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+});
+
+const datePickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    width: '90%',
+    maxWidth: 380,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  pickersRow: {
+    flexDirection: 'row',
+    padding: 16,
+  },
+  pickerColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  pickerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  pickerScroll: {
+    height: 180,
+    width: '100%',
+  },
+  pickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 2,
+    marginHorizontal: 4,
+  },
+  pickerItemSelected: {
+    backgroundColor: Colors.primary,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+  pickerItemTextSelected: {
+    color: Colors.white,
+    fontWeight: '600',
+  },
+  buttons: {
+    flexDirection: 'row',
+    padding: 16,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray,
+  },
+  cancelButton: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderColor: Colors.gray,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
+  confirmButton: {
+    flex: 1,
+    height: 44,
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
   },
 });
