@@ -5,8 +5,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
+  Modal,
   StyleSheet,
-  Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,168 @@ import { useRouter } from 'expo-router';
 import { useApp } from '../../context/AppContext';
 import { Colors } from '../../constants';
 import { CountryPicker } from '../../components';
+
+// Custom Alert Modal (Web Compatible)
+const AlertModal = ({ visible, title, message, buttons, onClose }) => {
+  if (!visible) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={alertStyles.overlay}>
+        <View style={alertStyles.container}>
+          <Text style={alertStyles.title}>{title}</Text>
+          {message && <Text style={alertStyles.message}>{message}</Text>}
+          <View style={alertStyles.buttons}>
+            {buttons.map((button, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  alertStyles.button,
+                  button.style === 'destructive' && alertStyles.buttonDestructive,
+                  button.style === 'cancel' && alertStyles.buttonCancel,
+                  buttons.length === 1 && { flex: 1 },
+                ]}
+                onPress={() => {
+                  if (button.onPress) button.onPress();
+                  onClose();
+                }}
+              >
+                <Text style={[
+                  alertStyles.buttonText,
+                  button.style === 'destructive' && alertStyles.buttonTextDestructive,
+                  button.style === 'cancel' && alertStyles.buttonTextCancel,
+                ]}>{button.text}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+// Help & Support Screen
+const HelpSupportScreen = ({ onBack }) => (
+  <View style={styles.container}>
+    <SafeAreaView style={styles.header} edges={['top']}>
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Ionicons name="chevron-back" size={24} color={Colors.white} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Help & Support</Text>
+      <View style={{ width: 40 }} />
+    </SafeAreaView>
+
+    <ScrollView contentContainerStyle={styles.helpContent}>
+      <View style={styles.helpCard}>
+        <View style={styles.helpSection}>
+          <Text style={styles.helpSectionTitle}>Frequently Asked Questions</Text>
+          
+          <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>How do I add a new trip?</Text>
+            <Text style={styles.faqAnswer}>
+              Go to the Tracker tab and tap the "Add Trip" button. Fill in your destination, visa type, and travel dates.
+            </Text>
+          </View>
+
+          <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>How do notifications work?</Text>
+            <Text style={styles.faqAnswer}>
+              VisaFlow sends alerts at 14, 7, 3, and 1 days before your visa expires. Make sure notifications are enabled in Settings.
+            </Text>
+          </View>
+
+          <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>Is my data secure?</Text>
+            <Text style={styles.faqAnswer}>
+              Yes! Your data is encrypted and stored securely. We never share your personal information with third parties.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.helpSection}>
+          <Text style={styles.helpSectionTitle}>Contact Us</Text>
+          <Text style={styles.contactText}>
+            Have questions or feedback? We'd love to hear from you!
+          </Text>
+          <TouchableOpacity 
+            style={styles.contactButton}
+            onPress={() => Linking.openURL('mailto:support@visaflow.app')}
+          >
+            <Ionicons name="mail-outline" size={20} color={Colors.primary} />
+            <Text style={styles.contactButtonText}>support@visaflow.app</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ScrollView>
+  </View>
+);
+
+// Privacy & Security Screen
+const PrivacySecurityScreen = ({ onBack }) => (
+  <View style={styles.container}>
+    <SafeAreaView style={styles.header} edges={['top']}>
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Ionicons name="chevron-back" size={24} color={Colors.white} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Privacy & Security</Text>
+      <View style={{ width: 40 }} />
+    </SafeAreaView>
+
+    <ScrollView contentContainerStyle={styles.privacyContent}>
+      <View style={styles.privacyCard}>
+        <View style={styles.privacySection}>
+          <View style={styles.privacyIconContainer}>
+            <Ionicons name="shield-checkmark" size={32} color={Colors.success} />
+          </View>
+          <Text style={styles.privacySectionTitle}>Your Data is Protected</Text>
+          <Text style={styles.privacyText}>
+            VisaFlow uses industry-standard encryption to protect your personal information and travel data.
+          </Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.privacyItem}>
+          <Ionicons name="lock-closed-outline" size={24} color={Colors.primary} />
+          <View style={styles.privacyItemContent}>
+            <Text style={styles.privacyItemTitle}>End-to-End Encryption</Text>
+            <Text style={styles.privacyItemText}>All your data is encrypted in transit and at rest</Text>
+          </View>
+        </View>
+
+        <View style={styles.privacyItem}>
+          <Ionicons name="eye-off-outline" size={24} color={Colors.primary} />
+          <View style={styles.privacyItemContent}>
+            <Text style={styles.privacyItemTitle}>No Data Selling</Text>
+            <Text style={styles.privacyItemText}>We never sell or share your personal information</Text>
+          </View>
+        </View>
+
+        <View style={styles.privacyItem}>
+          <Ionicons name="trash-outline" size={24} color={Colors.primary} />
+          <View style={styles.privacyItemContent}>
+            <Text style={styles.privacyItemTitle}>Data Deletion</Text>
+            <Text style={styles.privacyItemText}>You can delete your account and all data anytime</Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <TouchableOpacity style={styles.privacyLink}>
+          <Text style={styles.privacyLinkText}>View Privacy Policy</Text>
+          <Ionicons name="open-outline" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.privacyLink}>
+          <Text style={styles.privacyLinkText}>View Terms of Service</Text>
+          <Ionicons name="open-outline" size={18} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  </View>
+);
 
 // Subscription Screen Component
 const SubscriptionScreen = ({ trialDaysLeft, onBack }) => (
@@ -82,23 +245,25 @@ const NationalitySettingsScreen = ({ currentNationality, onSave, onBack }) => {
 
       <View style={styles.settingsContent}>
         <View style={styles.settingsCard}>
-          <Text style={styles.settingsLabel}>Nationality</Text>
-          <CountryPicker
-            value={nationality}
-            onSelect={(code, name) => {
-              setNationality(code);
-              setNationalityName(name);
-            }}
-            placeholder="Select your nationality"
-          />
+          <View style={{ padding: 16 }}>
+            <Text style={styles.settingsLabel}>Nationality</Text>
+            <CountryPicker
+              value={nationality}
+              onSelect={(code, name) => {
+                setNationality(code);
+                setNationalityName(name);
+              }}
+              placeholder="Select your nationality"
+            />
 
-          <TouchableOpacity
-            style={[styles.saveButton, !nationality && styles.saveButtonDisabled]}
-            onPress={() => nationality && onSave(nationality, nationalityName)}
-            disabled={!nationality}
-          >
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveButton, !nationality && styles.saveButtonDisabled]}
+              onPress={() => nationality && onSave(nationality, nationalityName)}
+              disabled={!nationality}
+            >
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -111,6 +276,9 @@ export default function SettingsScreen() {
   const { user, updateUser, logout } = useApp();
   const [showSubscription, setShowSubscription] = useState(false);
   const [showNationality, setShowNationality] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const getTrialDaysLeft = () => {
     if (!user?.trial_start) return 7;
@@ -122,21 +290,12 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Log Out',
-      'Are you sure you want to log out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: () => {
-            logout();
-            router.replace('/onboarding');
-          },
-        },
-      ]
-    );
+    setShowLogoutAlert(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    router.replace('/onboarding');
   };
 
   const handleToggleNotifications = async () => {
@@ -163,6 +322,14 @@ export default function SettingsScreen() {
         onBack={() => setShowNationality(false)}
       />
     );
+  }
+
+  if (showHelp) {
+    return <HelpSupportScreen onBack={() => setShowHelp(false)} />;
+  }
+
+  if (showPrivacy) {
+    return <PrivacySecurityScreen onBack={() => setShowPrivacy(false)} />;
   }
 
   return (
@@ -201,7 +368,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           {/* Privacy */}
-          <TouchableOpacity style={styles.settingsRow}>
+          <TouchableOpacity style={styles.settingsRow} onPress={() => setShowPrivacy(true)}>
             <View style={styles.settingsRowLeft}>
               <View style={styles.iconContainer}>
                 <Ionicons name="shield-outline" size={22} color={Colors.primary} />
@@ -232,7 +399,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           {/* Help */}
-          <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
+          <TouchableOpacity style={[styles.settingsRow, { borderBottomWidth: 0 }]} onPress={() => setShowHelp(true)}>
             <View style={styles.settingsRowLeft}>
               <View style={styles.iconContainer}>
                 <Ionicons name="help-circle-outline" size={22} color={Colors.primary} />
@@ -249,9 +416,80 @@ export default function SettingsScreen() {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <AlertModal
+        visible={showLogoutAlert}
+        title="Log Out"
+        message="Are you sure you want to log out?"
+        buttons={[
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: confirmLogout },
+        ]}
+        onClose={() => setShowLogoutAlert(false)}
+      />
     </View>
   );
 }
+
+const alertStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    width: '85%',
+    maxWidth: 320,
+    padding: 24,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  message: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  buttons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.lightGray,
+  },
+  buttonDestructive: {
+    backgroundColor: Colors.critical,
+  },
+  buttonCancel: {
+    backgroundColor: Colors.lightGray,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  buttonTextDestructive: {
+    color: Colors.white,
+  },
+  buttonTextCancel: {
+    color: Colors.textSecondary,
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -277,13 +515,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: Colors.white,
-  },
-  mainHeaderTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: Colors.white,
-    textAlign: 'center',
-    paddingVertical: 24,
   },
   headerSpacer: {
     height: 20,
@@ -332,6 +563,27 @@ const styles = StyleSheet.create({
     color: Colors.success,
     marginTop: 2,
   },
+  settingsLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  saveButton: {
+    height: 48,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  saveButtonDisabled: {
+    backgroundColor: Colors.gray,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -352,30 +604,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.critical,
   },
-  settingsLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 8,
-    padding: 16,
-    paddingBottom: 0,
-  },
-  saveButton: {
-    height: 48,
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 16,
-    marginTop: 24,
-  },
-  saveButtonDisabled: {
-    backgroundColor: Colors.gray,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.white,
-  },
+  // Subscription Styles
   subContent: {
     padding: 16,
   },
@@ -477,5 +706,126 @@ const styles = StyleSheet.create({
   restoreText: {
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
+  },
+  // Help Content Styles
+  helpContent: {
+    padding: 16,
+  },
+  helpCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 24,
+  },
+  helpSection: {
+    marginBottom: 16,
+  },
+  helpSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.textPrimary,
+    marginBottom: 16,
+  },
+  faqItem: {
+    marginBottom: 16,
+  },
+  faqQuestion: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  faqAnswer: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.gray,
+    marginVertical: 20,
+  },
+  contactText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 16,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0f0ff',
+    padding: 16,
+    borderRadius: 12,
+  },
+  contactButtonText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '500',
+  },
+  // Privacy Content Styles
+  privacyContent: {
+    padding: 16,
+  },
+  privacyCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 24,
+  },
+  privacySection: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  privacyIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#e8f5e9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  privacySectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  privacyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  privacyItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+    paddingVertical: 12,
+  },
+  privacyItemContent: {
+    flex: 1,
+  },
+  privacyItemTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  privacyItemText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  privacyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lightGray,
+  },
+  privacyLinkText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '500',
   },
 });
