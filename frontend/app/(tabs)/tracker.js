@@ -16,7 +16,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useApp } from '../../context/AppContext';
 import { Colors, getStatusColor, getStatusText, VISA_TYPES } from '../../constants';
-import { ProgressRing, TripCard, CountryPicker } from '../../components';
+import { ProgressRing, CountryPicker, CountryFlag } from '../../components';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +36,11 @@ const calculateProgress = (entryDate, exitDate) => {
   return Math.min(100, Math.max(0, (daysUsed / totalDays) * 100));
 };
 
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 // Add Trip Modal Component
 const AddTripModal = ({ visible, onClose, onSave }) => {
   const [country, setCountry] = useState('');
@@ -47,7 +52,7 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
   const [showExitPicker, setShowExitPicker] = useState(false);
   const [showVisaPicker, setShowVisaPicker] = useState(false);
 
-  const formatDate = (date) => {
+  const formatDateDisplay = (date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
@@ -126,7 +131,7 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
                   style={modalStyles.picker}
                   onPress={() => setShowEntryPicker(true)}
                 >
-                  <Text style={modalStyles.pickerText}>{formatDate(entryDate)}</Text>
+                  <Text style={modalStyles.pickerText}>{formatDateDisplay(entryDate)}</Text>
                   <Ionicons name="calendar-outline" size={20} color={Colors.textSecondary} />
                 </TouchableOpacity>
               </View>
@@ -137,7 +142,7 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
                   style={modalStyles.picker}
                   onPress={() => setShowExitPicker(true)}
                 >
-                  <Text style={modalStyles.pickerText}>{formatDate(exitDate)}</Text>
+                  <Text style={modalStyles.pickerText}>{formatDateDisplay(exitDate)}</Text>
                   <Ionicons name="calendar-outline" size={20} color={Colors.textSecondary} />
                 </TouchableOpacity>
               </View>
@@ -221,6 +226,60 @@ const AddTripModal = ({ visible, onClose, onSave }) => {
   );
 };
 
+// Wide Trip Card Component
+const TripCardWide = ({ trip, onDelete }) => {
+  const daysLeft = calculateDaysLeft(trip.exit_date);
+  const progress = calculateProgress(trip.entry_date, trip.exit_date);
+  const statusColor = getStatusColor(daysLeft);
+
+  return (
+    <View style={styles.tripCard}>
+      <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(trip.id)}>
+        <Ionicons name="close" size={20} color={Colors.textSecondary} />
+      </TouchableOpacity>
+
+      <View style={styles.tripHeader}>
+        <CountryFlag code={trip.country_code} size={56} />
+        <View style={styles.tripHeaderInfo}>
+          <Text style={styles.tripCountryName}>{trip.country}</Text>
+          <View style={styles.tripVisaBadge}>
+            <Text style={styles.tripVisaBadgeText}>{trip.visa_type}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.tripProgressContainer}>
+        <View style={styles.tripProgressBar}>
+          <View
+            style={[
+              styles.tripProgressFill,
+              { width: `${progress}%`, backgroundColor: statusColor },
+            ]}
+          />
+        </View>
+        <Text style={styles.tripProgressText}>{Math.round(progress)}% used</Text>
+      </View>
+
+      <View style={styles.tripDetails}>
+        <View style={styles.tripDetailRow}>
+          <Text style={styles.tripDetailLabel}>Entry Date</Text>
+          <Text style={styles.tripDetailValue}>{formatDate(trip.entry_date)}</Text>
+        </View>
+        <View style={styles.tripDetailRow}>
+          <Text style={styles.tripDetailLabel}>Exit By</Text>
+          <Text style={[styles.tripDetailValue, daysLeft <= 7 && styles.tripExitCritical]}>
+            {formatDate(trip.exit_date)}
+          </Text>
+        </View>
+        <View style={styles.tripDetailRow}>
+          <Text style={styles.tripDetailLabel}>Duration</Text>
+          <Text style={styles.tripDetailValue}>{trip.total_days} days</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 // Empty State Component
 const EmptyState = ({ onAddTrip }) => (
   <View style={styles.emptyState}>
@@ -232,14 +291,14 @@ const EmptyState = ({ onAddTrip }) => (
       Add your first trip to start tracking your visa countdown
     </Text>
     <TouchableOpacity style={styles.addButton} onPress={onAddTrip}>
-      <Ionicons name="add" size={24} color={Colors.white} />
+      <Ionicons name="add" size={24} color={Colors.primary} />
       <Text style={styles.addButtonText}>Add Trip</Text>
     </TouchableOpacity>
   </View>
 );
 
 export default function TrackerScreen() {
-  const { trips, deleteTrip, addTrip, showConfetti, triggerConfetti } = useApp();
+  const { user, trips, deleteTrip, addTrip, showConfetti } = useApp();
   const [modalVisible, setModalVisible] = useState(false);
   const [tick, setTick] = useState(0);
   const confettiRef = useRef(null);
@@ -264,11 +323,25 @@ export default function TrackerScreen() {
   const statusColor = getStatusColor(daysLeft);
   const statusText = getStatusText(daysLeft);
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.headerTitle}>VisaFlow</Text>
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
 
+  const firstName = user?.first_name || 'Traveler';
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']}>
+        <Text style={styles.welcomeText}>
+          Welcome back, {firstName}
+        </Text>
+      </SafeAreaView>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {!activeTrip ? (
           <EmptyState onAddTrip={() => setModalVisible(true)} />
         ) : (
@@ -279,20 +352,20 @@ export default function TrackerScreen() {
             </View>
 
             {/* Status Badge */}
-            <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
+            <View style={[styles.statusBadge, { backgroundColor: `${statusColor}30` }]}>
               <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
               <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
             </View>
 
-            {/* Trip Card */}
-            <TripCard trip={activeTrip} onDelete={deleteTrip} />
+            {/* Trip Card - Full Width */}
+            <TripCardWide trip={activeTrip} onDelete={deleteTrip} />
 
             {/* Add Another Trip Button */}
             <TouchableOpacity
               style={styles.addAnotherButton}
               onPress={() => setModalVisible(true)}
             >
-              <Ionicons name="add" size={20} color={Colors.primary} />
+              <Ionicons name="add" size={20} color={Colors.white} />
               <Text style={styles.addAnotherText}>Add Another Trip</Text>
             </TouchableOpacity>
           </View>
@@ -315,112 +388,207 @@ export default function TrackerScreen() {
           colors={[Colors.primary, Colors.success, Colors.warning]}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.primary,
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.white,
+    textAlign: 'center',
+    paddingVertical: 20,
   },
   scrollContent: {
     flexGrow: 1,
     padding: 16,
     paddingBottom: 100,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
   content: {
     alignItems: 'center',
   },
   ringContainer: {
     marginBottom: 16,
+    backgroundColor: Colors.white,
+    borderRadius: 150,
+    padding: 10,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
     marginBottom: 24,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
   },
   statusText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
+  // Trip Card Styles
+  tripCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    position: 'relative',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.lightGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  tripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 20,
+  },
+  tripHeaderInfo: {
+    flex: 1,
+  },
+  tripCountryName: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: Colors.textPrimary,
+    marginBottom: 6,
+  },
+  tripVisaBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: '#e8e8ff',
+    borderRadius: 14,
+  },
+  tripVisaBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  tripProgressContainer: {
+    marginBottom: 20,
+  },
+  tripProgressBar: {
+    height: 10,
+    backgroundColor: Colors.gray,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  tripProgressFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  tripProgressText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    textAlign: 'right',
+    marginTop: 6,
+  },
+  tripDetails: {
+    gap: 12,
+  },
+  tripDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tripDetailLabel: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+  },
+  tripDetailValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  tripExitCritical: {
+    color: Colors.critical,
+    fontWeight: '700',
+  },
+  // Empty State Styles
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 80,
+    paddingTop: 60,
   },
   emptyIcon: {
-    width: 120,
-    height: 120,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 60,
+    width: 140,
+    height: 140,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   emptyIconText: {
-    fontSize: 48,
-    opacity: 0.5,
+    fontSize: 56,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: 8,
+    fontSize: 26,
+    fontWeight: '700',
+    color: Colors.white,
+    marginBottom: 10,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 36,
     maxWidth: 280,
+    lineHeight: 24,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 16,
-    gap: 8,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 36,
+    paddingVertical: 18,
+    borderRadius: 18,
+    gap: 10,
   },
   addButtonText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: Colors.white,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   addAnotherButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 24,
-    gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 28,
+    gap: 10,
   },
   addAnotherText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.primary,
+    color: Colors.white,
   },
 });
 
