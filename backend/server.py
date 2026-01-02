@@ -30,6 +30,7 @@ api_router = APIRouter(prefix="/api")
 class UserSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    first_name: Optional[str] = None
     nationality: Optional[str] = None
     nationality_code: Optional[str] = None
     notifications_enabled: bool = True
@@ -39,6 +40,7 @@ class UserSettings(BaseModel):
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class UserSettingsUpdate(BaseModel):
+    first_name: Optional[str] = None
     nationality: Optional[str] = None
     nationality_code: Optional[str] = None
     notifications_enabled: Optional[bool] = None
